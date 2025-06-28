@@ -1,10 +1,9 @@
-// src/courses/courses.controller.ts
-
 import { Controller, Post, Get, Param, Body, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { FileInterceptor } from '@nestjs/platform-express'; // File upload handling
 import { ApiSecurity, } from '@nestjs/swagger';
 import { Request } from 'express';
+import { EnrollStudentDto, RecommendDto, UpdateEnrollmentStatusDto } from './dto/create-course.dto';
 
 
 
@@ -20,7 +19,7 @@ export class CoursesController {
   @Post('create')
   async createCourse(@Body() courseDetails: any, @Req() req: Request) {
     try {
-      return this.coursesService.createOrUpdateCourse(courseDetails, req);
+      return this.coursesService.createCourse(courseDetails, req);
     } catch (error) {
       throw error;
     }
@@ -39,20 +38,20 @@ export class CoursesController {
   }
 
   // Enroll student in a course student
-  @Post(':courseId/enroll')
-  async enrollStudent(@Param('courseId') courseId: string, @Req() req: Request) {
+  @Post('/enroll')
+  async enrollStudent(@Body() enrollStudentDto: EnrollStudentDto, @Req() req: Request) {
     try {
-      return this.coursesService.enrollStudent(courseId, req);
+      return this.coursesService.enrollStudent(enrollStudentDto, req);
     } catch (error) {
       throw error;
     }
   }
 
   // Approve or reject student enrollment (Admin)
-  @Post(':enrollmentId/status')
-  async updateEnrollmentStatus(@Param('enrollmentId') enrollmentId: string, @Req() req: Request) {
+  @Post('/enrollment/status')
+  async updateEnrollmentStatus(@Body() updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, @Req() req: Request) {
     try {
-      return this.coursesService.updateEnrollmentStatus(enrollmentId, req);
+      return this.coursesService.updateEnrollmentStatus(updateEnrollmentStatusDto, req);
     } catch (error) {
       throw error;
     }
@@ -60,9 +59,9 @@ export class CoursesController {
 
   // Get course recommendations (AI)
   @Post('recommend')
-  async recommendCourses(@Body() body: { interests: string[] }) {
+  async recommendCourses(@Body() recommendDto: RecommendDto) {
     try {
-      return this.coursesService.recommendCourses(body.interests);
+      return this.coursesService.recommendCourses(recommendDto);
     } catch (error) {
       throw error;
     }

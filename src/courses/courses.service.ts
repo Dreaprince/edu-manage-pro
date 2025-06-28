@@ -1,15 +1,15 @@
 
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { User } from '../users/entities/user.entity';  // Lecturer reference
-import { Syllabus } from './entities/syllabus.entity';  // Syllabus handling
-import { Enrollment } from './entities/enrollment.entity';  // Enrollment management
 import { AiService } from '../ai/ai.service';
 import { Request } from 'express';
-import { CreateCourseDto } from './dto/create-course.dto';
+import { CreateCourseDto, EnrollStudentDto, RecommendDto, UpdateEnrollmentStatusDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { Syllabus } from 'src/syllabus/entities/syllabus.entity';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 
 
 
@@ -95,63 +95,114 @@ export class CoursesService {
         data: updatedCourse,
       };
     } catch (error) {
-      console.error('Error creating course:', error);
+      console.error('Error updating course:', error);
       throw error;
     }
   }
 
 
-
-
   // Upload syllabus for a course
-  async uploadSyllabus(courseId: string, filePath: string): Promise<Syllabus> {
-    const course = await this.courseRepository.findOne({ where: { id: courseId } });
-    if (!course) {
-      throw new ConflictException('Course not found');
+  async uploadSyllabus(courseId: string, filePath: string): Promise<any> {
+    try {
+      const course = await this.courseRepository.findOne({ where: { id: courseId } });
+      if (!course) {
+        throw new ConflictException('Course not found');
+      }
+
+      const syllabus = this.syllabusRepository.create({
+        filePath,
+        course,
+      });
+
+      const savedSyllabus = await this.syllabusRepository.save(syllabus);
+      return {
+        statusCode: "00",
+        message: 'Syllabus created successful',
+        data: savedSyllabus,
+      };
+    } catch (error) {
+      console.error('Error creating Syllabus:', error);
+      throw error;
     }
-
-    const syllabus = this.syllabusRepository.create({
-      filePath,
-      course,
-    });
-
-    return await this.syllabusRepository.save(syllabus);
   }
 
   // Enroll a student in a course
-  async enrollStudent(courseId: string, student: User): Promise<Enrollment> {
-    const course = await this.courseRepository.findOne({ where: { id: courseId } });
-    if (!course) {
-      throw new NotFoundException('Course not found');
+  async enrollStudent(enrollStudentDto: EnrollStudentDto, req: Request): Promise<any> {
+    try {
+      // Extract the role from the decoded JWT token
+      const userRole = req?.decoded?.role;
+      if (userRole !== 'student') {
+        throw new ForbiddenException('Only students are allowed to enroll in courses.');
+      }
+
+      // Fetch the course based on courseId from the request
+      const course = await this.courseRepository.findOne({ where: { id: enrollStudentDto.courseId } });
+      if (!course) {
+        throw new NotFoundException(`Course with ID ${enrollStudentDto.courseId} not found.`);
+      }
+
+      // Fetch the student based on studentId from the request
+      const student = await this.userRepository.findOne({ where: { id: enrollStudentDto.studentId } });
+      if (!student) {
+        throw new NotFoundException(`Student with ID ${enrollStudentDto.studentId} not found.`);
+      }
+
+      // Create a new enrollment record
+      const enrollment = this.enrollmentRepository.create({
+        student,  // Set the student as the User entity
+        course,   // Set the course as the Course entity
+        status: 'pending',
+      });
+
+      // Save the new enrollment record in the database
+      const savedEnrollment = await this.enrollmentRepository.save(enrollment);
+
+      // Return a success response
+      return {
+        statusCode: '00', // Status code for success
+        message: 'Enrollment successfully created.',
+        data: savedEnrollment,
+      };
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      throw error;
     }
-
-    const enrollment = this.enrollmentRepository.create({
-      student,
-      course,
-      status: 'pending',
-    });
-
-    return await this.enrollmentRepository.save(enrollment);
   }
 
   // Approve or reject student enrollment
-  async updateEnrollmentStatus(enrollmentId: string, status: string): Promise<Enrollment> {
-    const enrollment = await this.enrollmentRepository.findOne({ where: { id: enrollmentId } });
-    if (!enrollment) {
-      throw new NotFoundException('Enrollment not found');
-    }
+  async updateEnrollmentStatus(updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, req: Request): Promise<any> {
+    try {
+      const userRole = req?.decoded?.role;
+      if (userRole !== 'admin') {
+        throw new ForbiddenException('Only admin can update emrollment.');
+      }
 
-    enrollment.status = status;
-    return await this.enrollmentRepository.save(enrollment);
+      const { status, enrollmentId } = updateEnrollmentStatusDto
+      const enrollment = await this.enrollmentRepository.findOne({ where: { id: enrollmentId } });
+      if (!enrollment) {
+        throw new NotFoundException('Enrollment not found');
+      }
+
+      enrollment.status = status;
+      const updatedEnrollment = await this.enrollmentRepository.save(enrollment);
+      return {
+        statusCode: '00', 
+        message: 'Enrollment successfully updated.',
+        data: updatedEnrollment,
+      };
+    } catch (error) {
+      console.error('Error updating enrollment:', error);
+      throw error;
+    }
   }
 
   // Generate course recommendations based on student interests
-  async recommendCourses(interests: string[]): Promise<any> {
-    return await this.aiService.recommendCourses(interests);
+  async recommendCourses(recommendDto: RecommendDto): Promise<any> {
+    return await this.aiService.recommendCourses(recommendDto.interests);
   }
 
   // Generate syllabus for a course
-  async generateSyllabus(topic: string): Promise<any> {
+  async generateSyllabus(generateSyllabusDto): Promise<any> {
     return await this.aiService.generateSyllabus(topic);
   }
 }
