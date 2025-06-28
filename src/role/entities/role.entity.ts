@@ -1,5 +1,4 @@
-import { Permission } from 'src/permissions/entities/permission.entity';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Role {
@@ -14,10 +13,6 @@ export class Role {
 
   @Column('boolean', { default: false }) // Adds the isLogin property
   isLogin: boolean;
-
-  @OneToMany(() => Permission, (permission) => permission.role)
-  permissions: Permission[];
-
 
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   created_at: Date;

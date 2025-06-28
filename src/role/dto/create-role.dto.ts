@@ -23,18 +23,6 @@ export class CreateRoleDto {
 }
 
 
-export class AssignPermissionsDto {
-  @ApiProperty({
-    type: [Number],
-    example: [9, 10, 11, 12, 13],
-    description: 'Array of permission IDs',
-  })
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsInt({ each: true })
-  permissionIds: number[];
-}
-
 
 export class FindAllQueryParamsDto {
   @ApiPropertyOptional({

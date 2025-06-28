@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
 import { In, Repository } from 'typeorm';
 import { Request } from 'express';
-import { Permission } from 'src/permissions/entities/permission.entity';
 
 
 @Injectable()
@@ -13,18 +12,11 @@ export class RoleService {
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    @InjectRepository(Permission)
-    private permissionRepository: Repository<Permission>,
   ) { }
 
 
   async create(createRoleDto: CreateRoleDto, req: Request): Promise<any> {
     try {
-
-      const permissions = req?.decoded?.permissions; // Adjust if you access the user differently
-      if (!permissions?.includes('can_create_role')) {
-        throw new ForbiddenException('You do not have permission to create role.');
-      }
 
       const existingName = await this.roleRepository.findOneBy({ name: createRoleDto.name });
       if (existingName) {
@@ -61,11 +53,6 @@ export class RoleService {
         query = query.andWhere('role.name = :name', { name });
       }
 
-      // Load the permissions associated with the role
-      query = query
-        .leftJoin('role.permissions', 'permission')
-        .addSelect(['permission.name'])
-
       const roles = await query.getMany();
       return {
         statusCode: "00",
@@ -81,10 +68,6 @@ export class RoleService {
 
   async remove(id: number, req: Request): Promise<any> {
     try {
-      const permissions = req?.decoded?.permissions; // Adjust if you access the user differently
-      if (!permissions?.includes('can_delete_role')) {
-        throw new ForbiddenException('You do not have permission to delete role.');
-      }
 
 
       const role = await this.roleRepository.findOneBy({ id });
@@ -134,86 +117,6 @@ export class RoleService {
       throw error;
     }
 
-  }
-
-  async assignPermissions(roleId: number, permissionIds: number[], req: Request): Promise<any> {
-    try {
-      const permissionsFromRequest = req?.decoded?.permissions;
-      if (!permissionsFromRequest?.includes('can_assign_permissions')) {
-        throw new ForbiddenException('You do not have permission to assign permissions.');
-      }
-
-      const role = await this.roleRepository.findOne({
-        where: { id: roleId },
-        relations: ['permissions'],  // Make sure to load the permissions relationship
-      });
-      if (!role) {
-        throw new NotFoundException('Role not found');
-      }
-
-      // Assign the permissions to the role
-      const permissions = await this.permissionRepository.findBy({
-        id: In(permissionIds),  // Use the In operator to fetch multiple permissions
-      });
-      if (permissions.length !== permissionIds.length) {
-        throw new NotFoundException('Some permissions not found');
-      }
-
-      // Add the permissions to the role
-      permissions.forEach(permission => {
-        permission.role = role;  // Associate permission with the role
-      });
-
-      await this.permissionRepository.save(permissions);  // Save the permissions
-
-      return {
-        statusCode: '00',
-        message: 'Permissions assigned successfully',
-        data: role,
-      };
-    } catch (error) {
-      console.error('Error occurred while assigning permissions:', error);
-      throw error;
-    }
-  }
-
-  async removePermissions(roleId: number, permissionIds: number[], req: Request): Promise<any> {
-    try {
-      const permissionsFromRequest = req?.decoded?.permissions;
-      if (!permissionsFromRequest?.includes('can_remove_permissions')) {
-        throw new ForbiddenException('You do not have permission to remove permissions.');
-      }
-
-      const role = await this.roleRepository.findOne({
-        where: { id: roleId },
-        relations: ['permissions'],  // Load the permissions relationship
-      });
-      if (!role) {
-        throw new NotFoundException('Role not found');
-      }
-
-      // Find the permissions to remove
-      const permissions = await this.permissionRepository.findByIds(permissionIds);
-      if (permissions.length !== permissionIds.length) {
-        throw new NotFoundException('Some permissions not found');
-      }
-
-      // Remove the role association from the permissions
-      permissions.forEach(permission => {
-        permission.role = null;  // Dissociate permission from the role
-      });
-
-      await this.permissionRepository.save(permissions);  // Save the updated permissions
-
-      return {
-        statusCode: '00',
-        message: 'Permissions removed successfully',
-        data: role,
-      };
-    } catch (error) {
-      console.error('Error occurred while removing permissions:', error);
-      throw error;
-    }
   }
 
 
