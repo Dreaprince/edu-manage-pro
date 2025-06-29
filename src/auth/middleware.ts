@@ -52,7 +52,6 @@ export class AuthMiddleware implements NestMiddleware {
                     fullName: req.decoded.fullName,
                     action: req.method,
                     newData: JSON.stringify(req.body),
-                    resource: req.originalUrl,
                     role: req.decoded.role,
                 };
                 await this.auditLogService.logUserActivity(auditLogObject);

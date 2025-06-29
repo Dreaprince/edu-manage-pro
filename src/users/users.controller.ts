@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Req, Body, Patch, Query, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Req, Body, Patch, Query, Param, Delete, BadRequestException, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, FindAllQueryParamsDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ApiSecurity, } from '@nestjs/swagger';
-import { Request } from 'express';
+
 
 
 
@@ -28,7 +28,7 @@ export class UsersController {
 
 
   @Delete('/:id')
-  remove(@Param('id') id: string, @Req() req: Request) {
+  remove(@Param('id') id: string, @Request() req) {
     try {
       return this.usersService.remove(id, req);
     } catch (error) {
@@ -37,7 +37,7 @@ export class UsersController {
   }
 
   @Post('/signup')
-  async signup(@Body() createUserDto: CreateUserDto, @Req() req: Request) {
+  async signup(@Body() createUserDto: CreateUserDto, @Request() req) {
     try {
       return this.usersService.create(createUserDto, req);
     } catch (error) {
@@ -80,7 +80,7 @@ export class UsersController {
   // }
 
   @Patch('/update-users')
-  async updateUser(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
+  async updateUser(@Body() updateUserDto: UpdateUserDto, @Request() req) {
     try {
       return this.usersService.update(updateUserDto, req);
     } catch (error) {

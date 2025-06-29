@@ -6,7 +6,7 @@ import { Course } from './entities/course.entity';
 import { User } from '../users/entities/user.entity';  // Lecturer reference
 import { AiService } from '../ai/ai.service';
 import { Request } from 'express';
-import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
+import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, GetCoursesDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Syllabus } from 'src/syllabus/entities/syllabus.entity';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
@@ -30,7 +30,7 @@ export class CoursesService {
   // Create or update a course
   async createCourse(createCourseDto: CreateCourseDto, req: Request): Promise<any> {
     try {
-      const roleCheck = req?.decoded?.role;  // Extract role from decoded JWT token
+      const roleCheck = req?.decoded?.role?.toLowerCase();  // Extract role from decoded JWT token
       if (!['lecturer'].includes(roleCheck)) {
         throw new ForbiddenException('You do not have permission to create a course.');
       }
@@ -86,9 +86,46 @@ export class CoursesService {
     }
   }
 
+
+  async getCourses(getCoursesDto: GetCoursesDto, req: Request): Promise<any> {
+    try {
+      const roleCheck = req?.decoded?.role?.toLowerCase(); // Extract role from decoded JWT token
+      const userId = req?.decoded?.userId;
+
+      let query = this.courseRepository.createQueryBuilder('course')
+        .leftJoin('course.lecturer', 'user')  // Join the User (lecturer) entity
+        .addSelect(['user.id', 'user.name']);  // Select id and fullName from the User entity
+
+      // Dynamically build the query based on available query parameters
+      if (getCoursesDto.title) {
+        query = query.andWhere('course.title LIKE :title', { title: `%${getCoursesDto.title}%` });
+      }
+
+      if (roleCheck === 'lecturer') {
+        query = query.andWhere('course.lecturerId = :lecturerId', { lecturerId: userId }); // Filter by lecturer for lecturers
+      }
+
+      // Execute the query to fetch courses
+      const courses = await query.getMany();
+
+      // Return the fetched courses
+      return {
+        statusCode: "00",
+        message: 'Courses fetched successfully',
+        data: courses,
+      };
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      throw error;
+    }
+  }
+
+
+
+
   async updateCourse(updateCourseDto: UpdateCourseDto, req: Request): Promise<any> {
     try {
-      const roleCheck = req?.decoded?.role;  // Extract role from decoded JWT token
+      const roleCheck = req?.decoded?.role?.toLowerCase();  // Extract role from decoded JWT token
       if (!['lecturer'].includes(roleCheck)) {
         throw new ForbiddenException('You do not have permission to create a course.');
       }
@@ -160,7 +197,7 @@ export class CoursesService {
   async enrollStudent(enrollStudentDto: EnrollStudentDto, req: Request): Promise<any> {
     try {
       // Extract the role from the decoded JWT token
-      const userRole = req?.decoded?.role;
+      const userRole = req?.decoded?.role?.toLowerCase();
       if (userRole !== 'student') {
         throw new ForbiddenException('Only students are allowed to enroll in courses.');
       }
@@ -202,7 +239,7 @@ export class CoursesService {
   // Approve or reject student enrollment
   async updateEnrollmentStatus(updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, req: Request): Promise<any> {
     try {
-      const userRole = req?.decoded?.role;
+      const userRole = req?.decoded?.role?.toLowerCase();
       if (userRole !== 'admin') {
         throw new ForbiddenException('Only admin can update emrollment.');
       }

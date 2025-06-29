@@ -16,26 +16,24 @@ import { Syllabus } from './syllabus/entities/syllabus.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './role/entities/role.entity';
 import { AuthMiddleware } from './auth/middleware';
-import * as cors from 'cors'; // Use * as the default import for cors
+import * as cors from 'cors';  // Using 'cors' for CORS middleware
 import { Assignment } from './assignments/entities/assignment.entity';
+import { AuditLog } from './audit-log/entities/audit-log.entity';
+import { AuditLogModule } from './audit-log/audit-log.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      // host: process.env.DB_HOST,
-      // port: parseInt(process.env.DB_PORT, 10),
-      // username: process.env.DB_USERNAME,
-      // password: process.env.DB_PASSWORD,
-      // database: process.env.DB_DATABASE,
       host: 'localhost',
       port: 3309,
       username: 'root',
       password: '',
       database: 'edumanagepro',
-      entities: [Course, Enrollment, Syllabus, User, Role, Assignment],
-      synchronize: true
+      entities: [Course, Enrollment, Syllabus, User, Role, Assignment, AuditLog],
+      synchronize: true,
     }),
+    AuditLogModule,
     AuthModule,
     UsersModule,
     CoursesModule,
@@ -43,17 +41,19 @@ import { Assignment } from './assignments/entities/assignment.entity';
     RoleModule,
     AiModule,
     SyllabusModule,
-    EnrollmentModule],
+    EnrollmentModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule { 
-
-   configure(consumer: MiddlewareConsumer) {
+  configure(consumer: MiddlewareConsumer) {
+    // Apply CORS middleware first
     consumer
       .apply(cors())
-      .forRoutes('*');
+      .forRoutes('*'); // Apply CORS to all routes
 
+    // Apply AuthMiddleware for all routes except specified exclusions
     consumer
       .apply(AuthMiddleware)
       .exclude(
@@ -62,7 +62,6 @@ export class AppModule {
         { path: '/users/reset-password/:token', method: RequestMethod.POST },
         { path: '/role/register', method: RequestMethod.POST },
       )
-      .forRoutes('*');
-
+      .forRoutes('*'); // Apply AuthMiddleware to all other routes
   }
 }

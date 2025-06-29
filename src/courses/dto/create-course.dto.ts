@@ -87,3 +87,10 @@ export class UploadSyllabusDto {
 
 }
 
+export class GetCoursesDto {
+  @ApiProperty({ description: 'Title of the course to filter by', required: false })
+  @IsOptional()
+  @IsString()
+  title?: string; // Optional title filter for courses
+}
+

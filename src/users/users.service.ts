@@ -223,7 +223,7 @@ export class UsersService {
           email: user.email,
           userId: user.id,
           roleId: user.role.id,
-          roleName: user.role.name,
+          role: user.role.name,
           fullName: user.name
         },
         process.env.JWT_SECRET || "wb5Bx7U8bIKefg4PWBcNUoxibGFk92QY",

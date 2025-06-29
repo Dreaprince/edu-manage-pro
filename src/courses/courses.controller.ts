@@ -1,9 +1,8 @@
-import { Controller, Post, Body, Req, UploadedFile, UseInterceptors, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Req, UploadedFile, UseInterceptors, Patch, BadRequestException, Get, Query, Request } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { FileInterceptor } from '@nestjs/platform-express'; // File upload handling
 import { ApiSecurity, } from '@nestjs/swagger';
-import { Request } from 'express';
-import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
+import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, GetCoursesDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { ApiBody, ApiConsumes, } from '@nestjs/swagger';
 import { Express } from 'express';
@@ -20,7 +19,7 @@ export class CoursesController {
 
   // Create or update course (Lecturer)
   @Post('/create')
-  async createCourse(@Body() createCourseDto: CreateCourseDto, @Req() req: Request) {
+  async createCourse(@Body() createCourseDto: CreateCourseDto, @Request() req) {
     try {
       return this.coursesService.createCourse(createCourseDto, req);
     } catch (error) {
@@ -28,8 +27,19 @@ export class CoursesController {
     }
   }
 
+  // Endpoint to get all courses (with optional title filter)
+  @Get('')
+  async getCourses(@Query() getCoursesDto: GetCoursesDto, @Request() req) {
+    try {
+      console.log("req: ", req.decoded)
+      return await this.coursesService.getCourses(getCoursesDto, req);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Patch('/update')
-  async updateCourse(@Body() updateCourseDto: UpdateCourseDto, @Req() req: Request) {
+  async updateCourse(@Body() updateCourseDto: UpdateCourseDto, @Request() req) {
     try {
       return this.coursesService.updateCourse(updateCourseDto, req);
     } catch (error) {
@@ -83,7 +93,7 @@ export class CoursesController {
 
   // Enroll student in a course student
   @Post('/enroll')
-  async enrollStudent(@Body() enrollStudentDto: EnrollStudentDto, @Req() req: Request) {
+  async enrollStudent(@Body() enrollStudentDto: EnrollStudentDto, @Request() req) {
     try {
       return this.coursesService.enrollStudent(enrollStudentDto, req);
     } catch (error) {
@@ -93,7 +103,7 @@ export class CoursesController {
 
   // Approve or reject student enrollment (Admin)
   @Post('/enrollment/status')
-  async updateEnrollmentStatus(@Body() updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, @Req() req: Request) {
+  async updateEnrollmentStatus(@Body() updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, @Request() req) {
     try {
       return this.coursesService.updateEnrollmentStatus(updateEnrollmentStatusDto, req);
     } catch (error) {
