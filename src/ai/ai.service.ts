@@ -9,7 +9,7 @@ export class AiService {
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY, // Ensure you have an API key in .env
+      apiKey: "ssdhfjgkuhjkldfcgh", // Ensure you have an API key in .env
     });
   }
 

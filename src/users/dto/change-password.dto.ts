@@ -4,11 +4,11 @@ import { IsNotEmpty, IsString } from 'class-validator';
 export class ChangePasswordDto {
   @ApiProperty({
     description: 'The unique identifier for the user',
-    example: '123',
-    type: 'number'
+    example: '123dffgkhljk',
+    type: 'string'
   })
   @IsNotEmpty({ message: 'id is required.' })
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The current password of the user',

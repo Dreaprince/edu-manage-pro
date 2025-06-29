@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';  // Lecturer reference
-import { Enrollment } from './enrollment.entity';  // For student enrollments
-import { Syllabus } from './syllabus.entity';  // For syllabus (PDF, DOCX)
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { Syllabus } from 'src/syllabus/entities/syllabus.entity';
+
 
 @Entity()
 export class Course {
@@ -14,7 +15,7 @@ export class Course {
   @Column()
   description: string;
 
-  @ManyToOne(() => User, (user) => user.courses)
+  @ManyToOne(() => User, (user) => user.course)
   lecturer: User;
 
   @OneToMany(() => Enrollment, (enrollment) => enrollment.course)

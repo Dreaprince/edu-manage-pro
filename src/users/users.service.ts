@@ -84,7 +84,7 @@ export class UsersService {
       return {
         statusCode: "00",
         message: 'Staff creation successful',
-        data: { id: savedUser.id, staffName: savedUser.staffName, email: savedUser.email }
+        data: { id: savedUser.id, staffName: savedUser.name, email: savedUser.email }
       };
     } catch (error) {
       console.error('Error creating staff:', error);
@@ -150,7 +150,7 @@ export class UsersService {
     }
   }
 
-  async remove(id: number, req: Request): Promise<any> {
+  async remove(id: string, req: Request): Promise<any> {
     try {
 
       const role = req?.decoded?.role; // Adjust if you access the user differently
@@ -176,10 +176,9 @@ export class UsersService {
 
   async update(updateUserDto: UpdateUserDto, req: Request): Promise<any> {
     try {
-
       const role = req?.decoded?.role; // Adjust if you access the user differently
       if (!['admin', 'lecturer'].includes(role)) {
-        throw new ForbiddenException('You do not have permission to upsate user.');
+        throw new ForbiddenException('You do not have permission to update user.');
       }
 
       const { id } = updateUserDto;
@@ -189,15 +188,15 @@ export class UsersService {
       }
 
       // Map fields from DTO to the existing staff entity
-      const updatedUser = await this.userRepository.save({
-        ...existingUser,
-        ...updateUserDto // Spread the update DTO to overwrite existing fields
-      });
+      const updatedUser = Object.assign(existingUser, updateUserDto);
+
+      // Save the updated user
+      const savedUser = await this.userRepository.save(updatedUser);
 
       return {
         statusCode: "00",
         message: 'Successfully updated staff',
-        data: updatedUser
+        data: savedUser,
       };
     } catch (error) {
       console.error('Error occurred while updating staff: ', error);
@@ -205,11 +204,12 @@ export class UsersService {
     }
   }
 
+
   async validatePassword(plainPassword: string, hashedPassword: string) {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
 
-  async updatePassword(id: number, newPassword: string): Promise<void> {
+  async updatePassword(id: string, newPassword: string): Promise<void> {
     await this.userRepository.update({ id }, { password: newPassword });
   }
 
@@ -329,7 +329,7 @@ export class UsersService {
       );
 
       // Fetch the updated user details
-      const updatedUser = await this.userRepository.findOneBy({ id: staff.id });
+      const updatedUser = await this.userRepository.findOneBy({ id: user.id });
 
       return {
         statusCode: "00",

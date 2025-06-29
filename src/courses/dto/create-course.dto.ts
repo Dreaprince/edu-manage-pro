@@ -47,8 +47,8 @@ export class UpdateEnrollmentStatusDto {
 }
 
 export class RecommendDto {
-  @ApiProperty({ 
-    description: 'Array of interests represented as UUIDs', 
+  @ApiProperty({
+    description: 'Array of interests represented as UUIDs',
     type: [String],  // Specifies the interest as an array of strings
   })
   @IsArray()  // Ensure the value is an array
@@ -57,16 +57,23 @@ export class RecommendDto {
   interests: string[];
 }
 
-export class UpdateEnrollmentStatusDto {
-  @ApiProperty({ description: 'EnrollmentId' })
-  @IsUUID()
-  @IsNotEmpty()
-  enrollmentId: string;
-
-  @ApiProperty({ description: 'Status' })
+export class GenerateSyllabusDto {
+  @ApiProperty({ description: 'topic' })
   @IsString()
   @IsNotEmpty()
-  @IsIn(['pending', 'approved', 'rejected']) // Assuming status is a string with specific values
-  status: string;
+  topic: string;
+
+}
+
+export class UploadSyllabusDto {
+  @ApiProperty({ type: 'string' })
+  file: any;
+
+
+  @ApiProperty({ description: 'courseId' })
+  @IsString()
+  @IsNotEmpty()
+  courseId: string;
+
 }
 

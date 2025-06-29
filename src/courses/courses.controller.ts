@@ -1,9 +1,12 @@
-import { Controller, Post, Get, Param, Body, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Req, UploadedFile, UseInterceptors, Patch, BadRequestException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { FileInterceptor } from '@nestjs/platform-express'; // File upload handling
 import { ApiSecurity, } from '@nestjs/swagger';
 import { Request } from 'express';
-import { EnrollStudentDto, RecommendDto, UpdateEnrollmentStatusDto } from './dto/create-course.dto';
+import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
+import { ApiBody, ApiConsumes, } from '@nestjs/swagger';
+import { Express } from 'express';
 
 
 
@@ -16,24 +19,65 @@ export class CoursesController {
 
 
   // Create or update course (Lecturer)
-  @Post('create')
-  async createCourse(@Body() courseDetails: any, @Req() req: Request) {
+  @Post('/create')
+  async createCourse(@Body() createCourseDto: CreateCourseDto, @Req() req: Request) {
     try {
-      return this.coursesService.createCourse(courseDetails, req);
+      return this.coursesService.createCourse(createCourseDto, req);
     } catch (error) {
       throw error;
     }
   }
 
-  // Upload syllabus for a course (Lecturer)
-  @Post(':courseId/syllabus')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadSyllabus(@Param('courseId') courseId: string, @UploadedFile() file: Express.Multer.Filel, @Req() req: Request) {
+  @Patch('/update')
+  async updateCourse(@Body() updateCourseDto: UpdateCourseDto, @Req() req: Request) {
     try {
-      const filePath = `uploads/syllabus/${file.filename}`;
-      return this.coursesService.uploadSyllabus(courseId, filePath);
+      return this.coursesService.updateCourse(updateCourseDto, req);
     } catch (error) {
       throw error;
+    }
+  }
+
+
+  @Post('/update/syllabus')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        courseId: { type: 'string' },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB file size limit
+      },
+      dest: './uploads',  // Destination for file storage
+    }),
+  )
+  async uploadSyllabus(
+    @Body() uploadSyllabusDto: UploadSyllabusDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<any> {
+    try {
+      // Check if the file is available
+      if (!file) {
+        throw new BadRequestException('File is missing or invalid');
+      }
+
+      // Validate file type (only PDF or DOCX)
+      const allowedFileTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedFileTypes.includes(file.mimetype)) {
+        throw new BadRequestException('Only PDF and DOCX files are allowed');
+      }
+
+      // Set the file path in the DTO
+      uploadSyllabusDto.file = file;  // Attach the file to the DTO
+      return await this.coursesService.uploadSyllabus(uploadSyllabusDto);  // Call the service to save
+    } catch (error) {
+      throw error;  // Rethrow the error to be handled by a global exception filter
     }
   }
 
@@ -58,7 +102,7 @@ export class CoursesController {
   }
 
   // Get course recommendations (AI)
-  @Post('recommend')
+  @Post('/recommend')
   async recommendCourses(@Body() recommendDto: RecommendDto) {
     try {
       return this.coursesService.recommendCourses(recommendDto);
@@ -68,10 +112,10 @@ export class CoursesController {
   }
 
   // Generate syllabus for a course (AI)
-  @Post('syllabus')
-  async generateSyllabus(@Body() body: { topic: string }) {
+  @Post('/syllabus')
+  async generateSyllabus(@Body() generateSyllabusDto: GenerateSyllabusDto) {
     try {
-      return this.coursesService.generateSyllabus(body.topic);
+      return this.coursesService.generateSyllabus(generateSyllabusDto);
     } catch (error) {
       throw error;
     }

@@ -7,5 +7,5 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     @ApiProperty({ description: 'ID' })
     @IsNotEmpty()
     @IsNumber()
-    id: number;
+    id: string;
 }

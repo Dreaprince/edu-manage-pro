@@ -6,7 +6,7 @@ import { Course } from './entities/course.entity';
 import { User } from '../users/entities/user.entity';  // Lecturer reference
 import { AiService } from '../ai/ai.service';
 import { Request } from 'express';
-import { CreateCourseDto, EnrollStudentDto, RecommendDto, UpdateEnrollmentStatusDto } from './dto/create-course.dto';
+import { CreateCourseDto, EnrollStudentDto, GenerateSyllabusDto, RecommendDto, UpdateEnrollmentStatusDto, UploadSyllabusDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Syllabus } from 'src/syllabus/entities/syllabus.entity';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
@@ -102,27 +102,32 @@ export class CoursesService {
 
 
   // Upload syllabus for a course
-  async uploadSyllabus(courseId: string, filePath: string): Promise<any> {
+  async uploadSyllabus(uploadSyllabusDto: UploadSyllabusDto): Promise<any> {
     try {
-      const course = await this.courseRepository.findOne({ where: { id: courseId } });
+      const course = await this.courseRepository.findOne({ where: { id: uploadSyllabusDto.courseId } });
       if (!course) {
         throw new ConflictException('Course not found');
       }
 
+      // Define file path (assuming the file is saved under './uploads')
+      const filePath = `./uploads/${uploadSyllabusDto.file.filename}`;
+
+      // Create a new syllabus entry
       const syllabus = this.syllabusRepository.create({
-        filePath,
+        filePath,  // Save the file path in the database
         course,
       });
 
+      // Save the syllabus record in the database
       const savedSyllabus = await this.syllabusRepository.save(syllabus);
       return {
-        statusCode: "00",
-        message: 'Syllabus created successful',
+        statusCode: '00',
+        message: 'Syllabus uploaded successfully',
         data: savedSyllabus,
       };
     } catch (error) {
       console.error('Error creating Syllabus:', error);
-      throw error;
+      throw error;  // Rethrow the error
     }
   }
 
@@ -186,7 +191,7 @@ export class CoursesService {
       enrollment.status = status;
       const updatedEnrollment = await this.enrollmentRepository.save(enrollment);
       return {
-        statusCode: '00', 
+        statusCode: '00',
         message: 'Enrollment successfully updated.',
         data: updatedEnrollment,
       };
@@ -198,11 +203,31 @@ export class CoursesService {
 
   // Generate course recommendations based on student interests
   async recommendCourses(recommendDto: RecommendDto): Promise<any> {
-    return await this.aiService.recommendCourses(recommendDto.interests);
+    try {
+      const recomendedCourse = await this.aiService.recommendCourses(recommendDto.interests);
+      return {
+        statusCode: '00',
+        message: 'Course recomended successfully.',
+        data: recomendedCourse,
+      };
+    } catch (error) {
+      console.error('Error recomending course:', error);
+      throw error;
+    }
   }
 
   // Generate syllabus for a course
-  async generateSyllabus(generateSyllabusDto): Promise<any> {
-    return await this.aiService.generateSyllabus(topic);
+  async generateSyllabus(generateSyllabusDto: GenerateSyllabusDto): Promise<any> {
+    try {
+      const syllabusGenerated = await this.aiService.generateSyllabus(generateSyllabusDto.topic);
+      return {
+        statusCode: '00',
+        message: 'Syllabus Generated successfully.',
+        data: syllabusGenerated,
+      };
+    } catch (error) {
+      console.error('Error generating Syllabus:', error);
+      throw error;
+    }
   }
 }

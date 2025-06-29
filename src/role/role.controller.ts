@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req, Put } from '@nestjs/common';
 import { RoleService } from './role.service';
-import { AssignPermissionsDto, CreateRoleDto, FindAllQueryParamsDto } from './dto/create-role.dto';
+import {  CreateRoleDto, FindAllQueryParamsDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Request } from 'express';
 import { ApiSecurity } from '@nestjs/swagger';
@@ -51,33 +51,4 @@ export class RoleController {
     }
   }
 
-
-  @Put('/:roleId/assign-permissions')
-  async assignPermissions(
-    @Param('roleId') roleId: number,
-    @Body() assignPermissionsDto: AssignPermissionsDto,  // Expecting an array of permission IDs
-    @Req() req: Request
-  ) {
-    try {
-      const { permissionIds } = assignPermissionsDto;
-      return this.roleService.assignPermissions(roleId, permissionIds, req);
-    } catch (error) {
-      throw error;
-    }
-
-  }
-
-  @Delete('/:roleId/remove-permissions')
-  async removePermissions(
-    @Param('roleId') roleId: number,
-    @Body() permissionIds: number[],  // Expecting an array of permission IDs
-    @Req() req: Request
-  ) {
-    try {
-      return this.roleService.removePermissions(roleId, permissionIds, req);
-    } catch (error) {
-      throw error;
-    }
-
-  }
 }
