@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -15,28 +15,52 @@ import { Enrollment } from './enrollment/entities/enrollment.entity';
 import { Syllabus } from './syllabus/entities/syllabus.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './role/entities/role.entity';
+import { AuthMiddleware } from './auth/middleware';
+import cors from 'cors';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      // host: process.env.DB_HOST,
+      // port: parseInt(process.env.DB_PORT, 10),
+      // username: process.env.DB_USERNAME,
+      // password: process.env.DB_PASSWORD,
+      // database: process.env.DB_DATABASE,
+      host: 'localhost',
+      port: 3309,
+      username: 'root',
+      password: '',
+      database: 'edumanagepro',
       entities: [Course, Enrollment, Syllabus, User, Role],
       synchronize: true
     }),
-    AuthModule, 
-    UsersModule, 
-    CoursesModule, 
-    AssignmentsModule, 
-    RoleModule, 
-    AiModule, 
-    SyllabusModule, 
+    AuthModule,
+    UsersModule,
+    CoursesModule,
+    AssignmentsModule,
+    RoleModule,
+    AiModule,
+    SyllabusModule,
     EnrollmentModule],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule { 
+
+   configure(consumer: MiddlewareConsumer) {
+    // consumer
+    //   .apply(cors())
+    //   .forRoutes('*');
+
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        { path: '/user/signup', method: RequestMethod.POST },
+        { path: '/user/login', method: RequestMethod.POST },
+        { path: '/user/reset-password/:token', method: RequestMethod.POST }
+      )
+      .forRoutes('*');
+
+  }
+}

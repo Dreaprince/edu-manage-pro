@@ -7,28 +7,28 @@ import { UpdateSyllabusDto } from './dto/update-syllabus.dto';
 export class SyllabusController {
   constructor(private readonly syllabusService: SyllabusService) {}
 
-  @Post()
-  create(@Body() createSyllabusDto: CreateSyllabusDto) {
-    return this.syllabusService.create(createSyllabusDto);
-  }
+  // @Post()
+  // create(@Body() createSyllabusDto: CreateSyllabusDto) {
+  //   return this.syllabusService.create(createSyllabusDto);
+  // }
 
-  @Get()
-  findAll() {
-    return this.syllabusService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.syllabusService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.syllabusService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.syllabusService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSyllabusDto: UpdateSyllabusDto) {
-    return this.syllabusService.update(+id, updateSyllabusDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateSyllabusDto: UpdateSyllabusDto) {
+  //   return this.syllabusService.update(+id, updateSyllabusDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.syllabusService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.syllabusService.remove(+id);
+  // }
 }

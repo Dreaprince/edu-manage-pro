@@ -7,28 +7,28 @@ import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
-  @Post()
-  create(@Body() createAssignmentDto: CreateAssignmentDto) {
-    return this.assignmentsService.create(createAssignmentDto);
-  }
+  // @Post()
+  // create(@Body() createAssignmentDto: CreateAssignmentDto) {
+  //   return this.assignmentsService.create(createAssignmentDto);
+  // }
 
-  @Get()
-  findAll() {
-    return this.assignmentsService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.assignmentsService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.assignmentsService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.assignmentsService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAssignmentDto: UpdateAssignmentDto) {
-    return this.assignmentsService.update(+id, updateAssignmentDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateAssignmentDto: UpdateAssignmentDto) {
+  //   return this.assignmentsService.update(+id, updateAssignmentDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.assignmentsService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.assignmentsService.remove(+id);
+  // }
 }
