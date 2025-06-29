@@ -27,7 +27,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto, req: Request): Promise<any> {
     try {
-      // const roleCheck = req?.decoded?.role; // Adjust if you access the user differently
+      // const roleCheck = req?.decoded?.role?.toLowerCase() // Adjust if you access the user differently
       // if (!['admin', 'lecturer'].includes(roleCheck)) {
       //   throw new ForbiddenException('You do not have permission to delete user.');
       // }
@@ -135,7 +135,7 @@ export class UsersService {
   async remove(id: string, req: Request): Promise<any> {
     try {
 
-      const role = req?.decoded?.role; // Adjust if you access the user differently
+      const role = req?.decoded?.role?.toLowerCase(); // Adjust if you access the user differently
       if (!['admin', 'lecturer'].includes(role)) {
         throw new ForbiddenException('You do not have permission to delete user.');
       }
@@ -158,7 +158,7 @@ export class UsersService {
 
   async update(updateUserDto: UpdateUserDto, req: Request): Promise<any> {
     try {
-      const role = req?.decoded?.role; // Adjust if you access the user differently
+      const role = req?.decoded?.role?.toLowerCase(); // Adjust if you access the user differently
       if (!['admin', 'lecturer'].includes(role)) {
         throw new ForbiddenException('You do not have permission to update user.');
       }
@@ -205,6 +205,7 @@ export class UsersService {
       });
 
       if (!user) {
+        console.log("Incorrect username or password.")
         throw new BadRequestException("Incorrect username or password.");
       }
 

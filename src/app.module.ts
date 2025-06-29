@@ -57,9 +57,10 @@ export class AppModule {
     consumer
       .apply(AuthMiddleware)
       .exclude(
-        { path: '/user/signup', method: RequestMethod.POST },
-        { path: '/user/login', method: RequestMethod.POST },
-        { path: '/user/reset-password/:token', method: RequestMethod.POST }
+        { path: '/users/signup', method: RequestMethod.POST },
+        { path: '/users/login', method: RequestMethod.POST },
+        { path: '/users/reset-password/:token', method: RequestMethod.POST },
+        { path: '/role/register', method: RequestMethod.POST },
       )
       .forRoutes('*');
 
