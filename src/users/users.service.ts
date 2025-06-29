@@ -3,7 +3,7 @@ import { CreateUserDto, FindAllQueryParamsDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
-import { hashPassword, makeid } from 'src/auth/utility';
+import { hashPassword} from 'src/auth/utility';
 import { pushMail } from 'src/auth/notification';
 import { sign } from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
@@ -27,22 +27,22 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto, req: Request): Promise<any> {
     try {
-      const roleCheck = req?.decoded?.role; // Adjust if you access the user differently
-      if (!['admin', 'lecturer'].includes(roleCheck)) {
-        throw new ForbiddenException('You do not have permission to delete user.');
-      }
+      // const roleCheck = req?.decoded?.role; // Adjust if you access the user differently
+      // if (!['admin', 'lecturer'].includes(roleCheck)) {
+      //   throw new ForbiddenException('You do not have permission to delete user.');
+      // }
 
-      const { email, name, roleId } = createUserDto;
+      const { email, name, roleId, password } = createUserDto;
 
-      // Concurrently check for existing staff name and email
+      // Concurrently check for existing user name and email
       const [existingName, existingEmail] = await Promise.all([
         this.userRepository.findOneBy({ name }),
         this.userRepository.findOneBy({ email })
       ]);
 
-      if (existingName) {
-        throw new ConflictException('Name already exists.');
-      }
+      // if (existingName) {
+      //   throw new ConflictException('Name already exists.');
+      // }
       if (existingEmail) {
         throw new ConflictException('Email already exists.');
       }
@@ -53,99 +53,81 @@ export class UsersService {
         throw new ConflictException('Role does not exist.');
       }
 
-      // Create new staff with role
+      // Create new user with role
       const newUser = this.userRepository.create(createUserDto);
       newUser.role = role;
 
-      let password;
+      newUser.password = await hashPassword(password); // Use bcrypt directly
 
-      // Handle password assignment if applicable
-      if (role.isLogin) {
-        password = makeid(8); // Ensure this method exists or create it
-        newUser.password = await hashPassword(password); // Use bcrypt directly
-
-        // Consider creating and assigning an access token here if needed
-      }
 
       const savedUser = await this.userRepository.save(newUser);
 
       // Prepare userData for the email template
-      const userData = {
-        name,
-        email,
-        password, // Plain text password for email notification
-        role: role.name // Assuming the role object has a name property
-      };
+      // const userData = {
+      //   name,
+      //   email,
+      //   password, // Plain text password for email notification
+      //   role: role.name // Assuming the role object has a name property
+      // };
 
       // Send email with login credentials
-      const emailSubject = `Account Created - ${name}`;
-      await pushMail(userData, "signup", emailSubject, email);
+      // const emailSubject = `Account Created - ${name}`;
+      // await pushMail(userData, "signup", emailSubject, email);
 
       return {
         statusCode: "00",
-        message: 'Staff creation successful',
-        data: { id: savedUser.id, staffName: savedUser.name, email: savedUser.email }
+        message: 'User creation successful',
+        data: { id: savedUser.id, name: savedUser.name, email: savedUser.email }
       };
     } catch (error) {
-      console.error('Error creating staff:', error);
+      console.error('Error creating user:', error);
       throw error;
     }
   }
 
   async findAll(queryParams: FindAllQueryParamsDto) {
     try {
-      const { id, name, lga, role, email, phoneNumber } = queryParams;
+      const { id, name, role, email} = queryParams;
       let query = this.userRepository.createQueryBuilder('user');
 
       // Join the role relation to fetch role details
       query = query
-        .leftJoin('staff.role', 'role')
+        .leftJoin('user.role', 'role')
         .addSelect(['role.id', 'role.name'])
 
       // Dynamically build the query based on available query parameters
       if (id) {
-        query = query.andWhere('staff.id = :id', { id });
+        query = query.andWhere('user.id = :id', { id });
       }
       if (name) {
-        query = query.andWhere('staff.name = :name', { name });
-      }
-      if (lga) {
-        query = query.andWhere('staff.lga = :lga', { lga });
+        query = query.andWhere('user.name = :name', { name });
       }
       if (role) {
         query = query.andWhere('role.id = :role', { role }); // Ensure you match by role ID or another unique identifier
       }
       if (email) {
-        query = query.andWhere('staff.email = :email', { email });
+        query = query.andWhere('user.email = :email', { email });
       }
-      if (phoneNumber) {
-        query = query.andWhere('staff.phoneNumber = :phoneNumber', { phoneNumber });
-      }
+ 
 
-      const staff = await query.getMany();
+      const user = await query.getMany();
       return {
         statusCode: "00",
-        message: 'Fetch staff successfully',
-        data: staff.map(s => ({
+        message: 'Fetch user successfully',
+        data: user.map(s => ({
           id: s.id,
           name: s.name,
-          address: s.address,
-          lga: s.lga,
-          stateOfOrigin: s.stateOfOrigin,
-          country: s.country,
           email: s.email,
-          phoneNumber: s.phoneNumber,
           createdAt: s.createdAt,
-          role: s.role ? { // Add role details to the response
+          role: s.role ? { 
             id: s.role.id,
             name: s.role.name,
             description: s.role.description,
-            isLogin: s.role.isLogin
           } : null
         }))
       };
     } catch (error) {
-      console.error("Error occurred while fetching staff:", error);
+      console.error("Error occurred while fetching user:", error);
       throw error;
     }
   }
@@ -184,10 +166,10 @@ export class UsersService {
       const { id } = updateUserDto;
       const existingUser = await this.userRepository.findOneBy({ id });
       if (!existingUser) {
-        throw new NotFoundException(`Staff not found with ID: ${id}`);
+        throw new NotFoundException(`User not found with ID: ${id}`);
       }
 
-      // Map fields from DTO to the existing staff entity
+      // Map fields from DTO to the existing user entity
       const updatedUser = Object.assign(existingUser, updateUserDto);
 
       // Save the updated user
@@ -195,11 +177,11 @@ export class UsersService {
 
       return {
         statusCode: "00",
-        message: 'Successfully updated staff',
+        message: 'Successfully updated user',
         data: savedUser,
       };
     } catch (error) {
-      console.error('Error occurred while updating staff: ', error);
+      console.error('Error occurred while updating user: ', error);
       throw error;
     }
   }
@@ -254,7 +236,6 @@ export class UsersService {
         message: "Login Successful",
         data: {
           email: user.email,
-          phoneNumber: user.phoneNumber,
           token: accessToken,
           userName: user.name,
         },
@@ -288,8 +269,7 @@ export class UsersService {
         message: "Password Changed Successfully",
         data: {
           email: user.email,
-          fullName: user.name,
-          phoneNumber: user.phoneNumber
+          fullName: user.name
         }
       };
     } catch (error) {
@@ -339,7 +319,6 @@ export class UsersService {
           email: updatedUser.email,
           fullName: updatedUser.name,
           role: updatedUser.role,
-          phoneNumber: updatedUser.phoneNumber,
           passwordReset: updatedUser.passwordReset,
         },
       };

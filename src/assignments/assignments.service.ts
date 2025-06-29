@@ -1,26 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Assignment } from './entities/assignment.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
-import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { Course } from 'src/courses/entities/course.entity';
+import { User } from 'src/users/entities/user.entity'; // Assuming you have User entity
+import { UpdateAssignmentGradeDto } from './dto/update-assignment.dto';
 
 @Injectable()
-export class AssignmentsService {
-  create(createAssignmentDto: CreateAssignmentDto) {
-    return 'This action adds a new assignment';
+export class AssignmentService {
+  constructor(
+    @InjectRepository(Assignment)
+    private readonly assignmentRepository: Repository<Assignment>,
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
+  ) {}
+
+  // Method to create an assignment
+  async createAssignment(createAssignmentDto: CreateAssignmentDto): Promise<Assignment> {
+    const { courseId, studentId, file, grade } = createAssignmentDto;
+
+    // Find the course and student
+    const course = await this.courseRepository.findOne({ where: { id: courseId } });
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const student = await this.userRepository.findOne({ where: { id: studentId } });
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    // Create and save the assignment
+    const assignment = this.assignmentRepository.create({
+      course,
+      studentId,
+      file,
+      grade,
+    });
+
+    return await this.assignmentRepository.save(assignment);
   }
 
-  findAll() {
-    return `This action returns all assignments`;
-  }
+  // Method to update an assignment's grade
+  async updateGrade(updateAssignmentGradeDto: UpdateAssignmentGradeDto): Promise<Assignment> {
+    const { assignmentId, grade } = updateAssignmentGradeDto;
 
-  findOne(id: number) {
-    return `This action returns a #${id} assignment`;
-  }
+    // Find the assignment
+    const assignment = await this.assignmentRepository.findOne({ where: { id: assignmentId } });
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
 
-  update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    return `This action updates a #${id} assignment`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} assignment`;
+    // Update the grade
+    assignment.grade = grade;
+    return await this.assignmentRepository.save(assignment);
   }
 }

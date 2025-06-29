@@ -1,34 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AssignmentsService } from './assignments.service';
+import { Controller, Post, Body, Put } from '@nestjs/common';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
-import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AssignmentService } from './assignments.service';
+import { UpdateAssignmentGradeDto } from './dto/update-assignment.dto';
 
+
+@ApiSecurity('auth-token')
+@ApiTags('Assignments')
 @Controller('assignments')
-export class AssignmentsController {
-  constructor(private readonly assignmentsService: AssignmentsService) {}
+export class AssignmentController {
+  constructor(private readonly assignmentService: AssignmentService) {}
 
-  // @Post()
-  // create(@Body() createAssignmentDto: CreateAssignmentDto) {
-  //   return this.assignmentsService.create(createAssignmentDto);
-  // }
+  // Endpoint to create a new assignment
+  @Post()
+  async createAssignment(
+    @Body() createAssignmentDto: CreateAssignmentDto
+  ) {
+    const assignment = await this.assignmentService.createAssignment(createAssignmentDto);
+    return {
+      statusCode: 201,
+      message: 'Assignment created successfully',
+      data: assignment,
+    };
+  }
 
-  // @Get()
-  // findAll() {
-  //   return this.assignmentsService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.assignmentsService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAssignmentDto: UpdateAssignmentDto) {
-  //   return this.assignmentsService.update(+id, updateAssignmentDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.assignmentsService.remove(+id);
-  // }
+  // Endpoint to update the grade of an assignment
+  @Put('grade')
+  async updateAssignmentGrade(
+    @Body() updateAssignmentGradeDto: UpdateAssignmentGradeDto
+  ) {
+    const updatedAssignment = await this.assignmentService.updateGrade(updateAssignmentGradeDto);
+    return {
+      statusCode: 200,
+      message: 'Grade updated successfully',
+      data: updatedAssignment,
+    };
+  }
 }

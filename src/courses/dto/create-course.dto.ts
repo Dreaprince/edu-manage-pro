@@ -1,23 +1,33 @@
-import { IsString, IsNotEmpty, IsUUID, IsIn, IsArray, ArrayNotEmpty } from 'class-validator'; // Validation decorators
+import { IsString, IsNotEmpty, IsUUID, IsIn, IsArray, ArrayNotEmpty, IsNumber, IsOptional } from 'class-validator'; // Validation decorators
 import { Type } from 'class-transformer'; // To transform plain objects to class instances
 import { User } from '../../users/entities/user.entity'; // Assuming User entity exists
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCourseDto {
-  @ApiProperty({ description: 'Title' })
+  @ApiProperty({ description: 'Title of the course' })
   @IsString()
   @IsNotEmpty()
-  title: string; // Title of the course
+  title: string;
 
-  @ApiProperty({ description: 'Description' })
-  @IsString()
+  @ApiProperty({ description: 'Number of credits for the course' })
+  @IsNumber()
   @IsNotEmpty()
-  description: string; // Description of the course
+  credits: number;
 
-  @ApiProperty({ description: 'lectureId' })
+  @ApiProperty({ description: 'Lecturer ID' })
   @IsNotEmpty()
-  @Type(() => User) // Transform to a User instance
-  lecturerId: string; // Lecturer's user ID (will be used to assign the course to a lecturer)
+  @Type(() => User)
+  lecturerId: string;
+
+  @ApiProperty({ description: 'Syllabus for the course', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  syllabus: string[];
+
+  @ApiProperty({ description: 'Array of student IDs to be enrolled in the course', type: [String] })
+  @IsOptional()
+  @IsArray()
+  enrollments?: string[];
 }
 
 

@@ -11,9 +11,6 @@ export class Role {
   @Column('varchar', { length: 255 })
   description: string;
 
-  @Column('boolean', { default: false }) // Adds the isLogin property
-  isLogin: boolean;
-
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   created_at: Date;
 

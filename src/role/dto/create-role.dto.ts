@@ -15,11 +15,6 @@ export class CreateRoleDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ description: 'Can Login', required: false })
-  @IsOptional()
-  @IsBoolean()
-  isLogin?: boolean;
-
 }
 
 

@@ -7,51 +7,21 @@ export class CreateUserDto {
     @IsString()
     name: string;
 
-    @ApiProperty({ description: 'Address' })
-    @IsNotEmpty()
-    @IsString()
-    address: string;
-
-    @ApiProperty({ description: 'Local Government Area' })
-    @IsNotEmpty()
-    @IsString()
-    lga: string;
-
-    @ApiProperty({ description: 'State of Origin' })
-    @IsNotEmpty()
-    @IsString()
-    stateOfOrigin: string;
-
-    @ApiProperty({ description: 'Country' })
-    @IsNotEmpty()
-    @IsString()
-    country: string;
-
     @ApiProperty({ description: 'Email' })
     @IsNotEmpty()
     @IsEmail()
     email: string;
 
-    @ApiProperty({ description: 'Phone Number' })
-    @IsNotEmpty()
-    @IsPhoneNumber('NG')
-    phoneNumber: string;
-
-
-    @ApiProperty({ description: 'Created By', required: false })
-    @IsOptional()
-    @IsNumber()
-    createdBy?: number;
 
     @ApiProperty({ description: 'Role ID', required: false })
     @IsOptional()
     @IsNumber()
     roleId?: number;
 
-    // @ApiProperty({ description: 'Password Hash', required: false })
-    // @IsOptional()
-    // @IsString()
-    // passwordHash?: string;
+    @ApiProperty({ description: 'Password Hash', required: false })
+    @IsOptional()
+    @IsString()
+    password?: string;
 }
 
 
@@ -65,28 +35,12 @@ export class FindAllQueryParamsDto {
   name?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter by local government area (LGA)',
-    type: String,
-  })
-  @IsOptional()
-  @IsString()
-  lga?: string;
-
-  @ApiPropertyOptional({
     description: 'Filter by email address',
     type: String,
   })
   @IsOptional()
   @IsString()
   email?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter by phone number',
-    type: String,
-  })
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by User ID',

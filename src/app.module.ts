@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
-import { AssignmentsModule } from './assignments/assignments.module';
+import { AssignmentModule } from './assignments/assignments.module';
 import { RoleModule } from './role/role.module';
 import { AiModule } from './ai/ai.module';
 import { SyllabusModule } from './syllabus/syllabus.module';
@@ -16,7 +16,8 @@ import { Syllabus } from './syllabus/entities/syllabus.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './role/entities/role.entity';
 import { AuthMiddleware } from './auth/middleware';
-import cors from 'cors';
+import * as cors from 'cors'; // Use * as the default import for cors
+import { Assignment } from './assignments/entities/assignment.entity';
 
 @Module({
   imports: [
@@ -32,13 +33,13 @@ import cors from 'cors';
       username: 'root',
       password: '',
       database: 'edumanagepro',
-      entities: [Course, Enrollment, Syllabus, User, Role],
+      entities: [Course, Enrollment, Syllabus, User, Role, Assignment],
       synchronize: true
     }),
     AuthModule,
     UsersModule,
     CoursesModule,
-    AssignmentsModule,
+    AssignmentModule,
     RoleModule,
     AiModule,
     SyllabusModule,
@@ -49,9 +50,9 @@ import cors from 'cors';
 export class AppModule { 
 
    configure(consumer: MiddlewareConsumer) {
-    // consumer
-    //   .apply(cors())
-    //   .forRoutes('*');
+    consumer
+      .apply(cors())
+      .forRoutes('*');
 
     consumer
       .apply(AuthMiddleware)

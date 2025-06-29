@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity'; 
 import { Course } from 'src/courses/entities/course.entity';
 
@@ -18,5 +18,9 @@ export class Enrollment {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+    updatedAt: Date;
 }
+
 

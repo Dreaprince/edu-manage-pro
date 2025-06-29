@@ -12,23 +12,8 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column('varchar', { length: 15 })
-  phoneNumber: string;
-
   @Column()
   name: string;
-
-  @Column('varchar', { length: 255 })
-  address: string;
-
-  @Column('varchar', { length: 255 })
-  lga: string;
-
-  @Column('varchar', { length: 255 })
-  stateOfOrigin: string;
-
-  @Column('varchar', { length: 255 })
-  country: string;
 
   @Column('varchar', { nullable: true, length: 255 })
   password: string;

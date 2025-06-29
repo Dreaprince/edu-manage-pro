@@ -41,13 +41,38 @@ export class CoursesService {
         throw new NotFoundException('Lecturer not found');
       }
 
-      // Create the course and associate the lecturer
+      // Create the course object with the provided details
       const course = this.courseRepository.create({
-        ...createCourseDto,
-        lecturer,
+        title: createCourseDto.title,
+        credits: createCourseDto.credits,
+        syllabus: createCourseDto.syllabus,
+        lecturer, // Lecturer is already a full entity
       });
 
-      // Save the course to the database
+      // If enrollments are provided, process them
+      if (createCourseDto.enrollments && createCourseDto.enrollments.length > 0) {
+        const enrollments = [];
+        for (const studentId of createCourseDto.enrollments) {
+          // Find the student by ID
+          const student = await this.userRepository.findOne({ where: { id: studentId } });
+          if (!student) {
+            throw new NotFoundException(`Student with ID ${studentId} not found`);
+          }
+
+          // Create the Enrollment entity for each student
+          const enrollment = this.enrollmentRepository.create({
+            student, // The student entity
+            course, // The course entity
+          });
+
+          enrollments.push(enrollment);
+        }
+
+        // Attach the enrollments to the course
+        course.enrollments = enrollments;
+      }
+
+      // Save the course to the database, including the lecturer and enrollments
       const savedCourse = await this.courseRepository.save(course);
 
       return {
@@ -84,7 +109,7 @@ export class CoursesService {
 
       // Update other course details
       course.title = updateCourseDto.title || course.title;
-      course.description = updateCourseDto.description || course.description;
+      course.credits = updateCourseDto.credits || course.credits;
 
       // Save the updated course
       const updatedCourse = await this.courseRepository.save(course);
