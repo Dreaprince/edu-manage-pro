@@ -17,8 +17,9 @@ export class AuditLog {
   @Column({ type: 'text' })
   newData: string; 
 
-  @Column()
-  resource: string; 
+  
+  @Column({ nullable: true }) 
+  resource: string;
 
   @Column()
   role: string;
