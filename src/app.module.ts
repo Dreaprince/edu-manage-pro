@@ -26,7 +26,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
-      port: 3309,
+      port: 3400,
       username: 'root',
       password: '',
       database: 'edumanagepro',
