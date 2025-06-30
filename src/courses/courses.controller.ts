@@ -101,6 +101,16 @@ export class CoursesController {
     }
   }
 
+  // Drop student in a course student
+  @Post('/drop')
+  async dropStudent(@Body() dropCourseDto: EnrollStudentDto, @Request() req) {
+    try {
+      return this.coursesService.dropCourse(dropCourseDto, req);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Approve or reject student enrollment (Admin)
   @Post('/enrollment/status')
   async updateEnrollmentStatus(@Body() updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, @Request() req) {

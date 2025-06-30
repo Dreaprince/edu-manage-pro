@@ -1,26 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import { GetEnrollmentsDto } from './dto/create-enrollment.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Enrollment } from './entities/enrollment.entity';
+import { Repository } from 'typeorm';
+
 
 @Injectable()
 export class EnrollmentService {
-  create(createEnrollmentDto: CreateEnrollmentDto) {
-    return 'This action adds a new enrollment';
+  constructor(
+    @InjectRepository(Enrollment)
+    private readonly enrollmentRepository: Repository<Enrollment>,
+  ) {}
+
+  // Fetch enrollments based on filter criteria
+  async getEnrollments(getEnrollmentsDto: GetEnrollmentsDto): Promise<any> {
+    try {
+      const { status } = getEnrollmentsDto; // Extract status from DTO
+      
+      let query = this.enrollmentRepository.createQueryBuilder('enrollment')
+        .leftJoin('enrollment.course', 'course') // Join with course
+        .leftJoin('enrollment.student', 'student') // Join with student
+        .addSelect(['course.id', 'course.title']) // Select only course id and name
+        .addSelect(['student.id', 'student.name']); // Select only student id and name
+
+      // Filter by status if provided
+      if (status) {
+        query = query.andWhere('enrollment.status = :status', { status });
+      }
+
+      // Execute the query and get the filtered enrollments
+      const enrollments = await query.getMany();
+
+      return {
+        statusCode: '00',
+        message: 'Enrollments fetched successfully',
+        data: enrollments,
+      };
+    } catch (error) {
+      console.error('Error fetching enrollments:', error);
+      throw error;
+    }
   }
 
-  findAll() {
-    return `This action returns all enrollment`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} enrollment`;
-  }
 
-  update(id: number, updateEnrollmentDto: UpdateEnrollmentDto) {
-    return `This action updates a #${id} enrollment`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} enrollment`;
-  }
 }

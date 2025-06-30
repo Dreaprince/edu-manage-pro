@@ -239,6 +239,7 @@ export class UsersService {
           email: user.email,
           token: accessToken,
           userName: user.name,
+          roleName: user.role.name
         },
       };
     } catch (error) {

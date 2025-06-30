@@ -93,8 +93,12 @@ export class CoursesService {
       const userId = req?.decoded?.userId;
 
       let query = this.courseRepository.createQueryBuilder('course')
-        .leftJoin('course.lecturer', 'user')  // Join the User (lecturer) entity
-        .addSelect(['user.id', 'user.name']);  // Select id and fullName from the User entity
+        .leftJoin('course.lecturer', 'user')
+        .leftJoin('course.enrollments', 'enroll')
+        .leftJoin('enroll.student', 'student')
+        .addSelect(['user.id', 'user.name'])
+        .addSelect(['enroll.status'])
+        .addSelect(['student.id', 'student.name']);
 
       // Dynamically build the query based on available query parameters
       if (getCoursesDto.title) {
@@ -214,11 +218,24 @@ export class CoursesService {
         throw new NotFoundException(`Student with ID ${enrollStudentDto.studentId} not found.`);
       }
 
+      // Check if the student is already enrolled in this course
+      const existingEnrollment = await this.enrollmentRepository.findOne({
+        where: {
+          student: { id: enrollStudentDto.studentId },
+          course: { id: enrollStudentDto.courseId },
+        },
+      });
+
+      // If an enrollment already exists, throw an error (or return a message)
+      if (existingEnrollment) {
+        throw new ConflictException(`Student is already enrolled in this course.`);
+      }
+
       // Create a new enrollment record
       const enrollment = this.enrollmentRepository.create({
         student,  // Set the student as the User entity
         course,   // Set the course as the Course entity
-        status: 'pending',
+        status: 'pending',  // Set the initial status to 'pending'
       });
 
       // Save the new enrollment record in the database
@@ -235,6 +252,57 @@ export class CoursesService {
       throw error;
     }
   }
+
+
+
+  async dropCourse(dropCourseDto: EnrollStudentDto, req: Request): Promise<any> {
+    try {
+      // Extract the role from the decoded JWT token
+      const userRole = req?.decoded?.role?.toLowerCase();
+      if (userRole !== 'student') {
+        throw new ForbiddenException('Only students are allowed to drop courses.');
+      }
+
+      // Fetch the course based on courseId from the request
+      const course = await this.courseRepository.findOne({ where: { id: dropCourseDto.courseId } });
+      if (!course) {
+        throw new NotFoundException(`Course with ID ${dropCourseDto.courseId} not found.`);
+      }
+
+      // Fetch the student based on studentId from the request
+      const student = await this.userRepository.findOne({ where: { id: dropCourseDto.studentId } });
+      if (!student) {
+        throw new NotFoundException(`Student with ID ${dropCourseDto.studentId} not found.`);
+      }
+
+      // Fetch the enrollment record where the student and course match
+      const enrollment = await this.enrollmentRepository.findOne({
+        where: {
+          student: { id: dropCourseDto.studentId },
+          course: { id: dropCourseDto.courseId },
+        }
+      });
+
+      if (!enrollment) {
+        throw new NotFoundException(`Enrollment not found for the given student and course.`);
+      }
+
+      // Update the enrollment status to 'dropped' or false
+      enrollment.status = 'false'; // Change status to dropped or false
+      const updatedEnrollment = await this.enrollmentRepository.save(enrollment);
+
+      // Return a success response
+      return {
+        statusCode: '00', // Status code for success
+        message: 'Course dropped successfully.',
+        data: updatedEnrollment,
+      };
+    } catch (error) {
+      console.error('Error dropping course:', error);
+      throw error;
+    }
+  }
+
 
   // Approve or reject student enrollment
   async updateEnrollmentStatus(updateEnrollmentStatusDto: UpdateEnrollmentStatusDto, req: Request): Promise<any> {
