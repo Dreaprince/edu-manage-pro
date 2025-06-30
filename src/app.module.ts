@@ -26,7 +26,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
-      port: 3400,
+      port: 3306,
       username: 'root',
       password: '',
       database: 'edumanagepro',
@@ -46,7 +46,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { 
+export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply CORS middleware first
     consumer
