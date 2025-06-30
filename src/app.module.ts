@@ -62,6 +62,6 @@ export class AppModule {
         { path: '/users/reset-password/:token', method: RequestMethod.POST },
         { path: '/role/register', method: RequestMethod.POST },
       )
-      .forRoutes('*'); // Apply AuthMiddleware to all other routes
+      .forRoutes('/rrr'); // Apply AuthMiddleware to all other routes
   }
 }
