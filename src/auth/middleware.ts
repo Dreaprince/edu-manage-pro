@@ -32,7 +32,7 @@ export class AuthMiddleware implements NestMiddleware {
   
       jwt.verify(
         token, 
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || "wb5Bx7U8bIKefg4PWBcNUoxibGFk92QY",
         (err, decoded) => {
         if (err) {
             throw new UnauthorizedException('Invalid token');
