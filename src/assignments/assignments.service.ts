@@ -65,8 +65,7 @@ export class AssignmentService {
 
       const query = this.assignmentRepository
         .createQueryBuilder('assignment')
-        .leftJoin('assignment.course', 'course')
-        .addSelect(['course.id', 'student.title']);
+        .leftJoinAndSelect('assignment.course', 'course');
 
       // Optional: If you want to select specific fields only, use addSelect
 
