@@ -23,3 +23,11 @@ export class CreateAssignmentDto {
   grade?: number; // Optional grade
 }
 
+
+export class GetAssignmentsDto {
+  @IsOptional()
+  @IsUUID()
+  courseId?: string;
+}
+
+

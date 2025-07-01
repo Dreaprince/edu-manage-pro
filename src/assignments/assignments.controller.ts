@@ -1,5 +1,5 @@
-import { Controller, Post, Body, Put } from '@nestjs/common';
-import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { Controller, Post, Body, Put, Get, Query } from '@nestjs/common';
+import { CreateAssignmentDto, GetAssignmentsDto } from './dto/create-assignment.dto';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { AssignmentService } from './assignments.service';
 import { UpdateAssignmentGradeDto } from './dto/update-assignment.dto';
@@ -9,7 +9,7 @@ import { UpdateAssignmentGradeDto } from './dto/update-assignment.dto';
 @ApiTags('Assignments')
 @Controller('assignments')
 export class AssignmentController {
-  constructor(private readonly assignmentService: AssignmentService) {}
+  constructor(private readonly assignmentService: AssignmentService) { }
 
   // Endpoint to create a new assignment
   @Post()
@@ -35,5 +35,14 @@ export class AssignmentController {
       message: 'Grade updated successfully',
       data: updatedAssignment,
     };
+  }
+
+  @Get('')
+  async getCourses(@Query() getAssignmentsDto: GetAssignmentsDto) {
+    try {
+      return await this.assignmentService.getAssignments(getAssignmentsDto);
+    } catch (error) {
+      throw error;
+    }
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Assignment } from './entities/assignment.entity';
-import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { CreateAssignmentDto, GetAssignmentsDto } from './dto/create-assignment.dto';
 import { Course } from 'src/courses/entities/course.entity';
 import { User } from 'src/users/entities/user.entity'; // Assuming you have User entity
 import { UpdateAssignmentGradeDto } from './dto/update-assignment.dto';
@@ -16,7 +16,7 @@ export class AssignmentService {
     private readonly courseRepository: Repository<Course>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
-  ) {}
+  ) { }
 
   // Method to create an assignment
   async createAssignment(createAssignmentDto: CreateAssignmentDto): Promise<Assignment> {
@@ -58,4 +58,35 @@ export class AssignmentService {
     assignment.grade = grade;
     return await this.assignmentRepository.save(assignment);
   }
+
+  async getAssignments(dto: GetAssignmentsDto): Promise<any> {
+    try {
+      const { courseId } = dto;
+
+      const query = this.assignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin('assignment.course', 'course')
+        .addSelect(['course.id', 'student.title']);
+
+      // Optional: If you want to select specific fields only, use addSelect
+
+      if (courseId) {
+        query.andWhere('course.id = :courseId', { courseId });
+      }
+
+      const assignments = await query.getMany();
+
+      return {
+        statusCode: '00',
+        message: 'Assignments fetched successfully',
+        data: assignments,
+      };
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      throw error;
+    }
+  }
+
+
+
 }
